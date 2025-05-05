@@ -1,38 +1,156 @@
+/* main app container -- overall layer wrapper for content inside the app */
 .App {
-  text-align: center;
+  display: flex; /* turn on flexstyle */
+  flex-direction: column; /* directs content into a column */
+  align-items: center; /* centers content vertically */
+  text-align: center; /* center texts inside App container */
+  flex-grow: 1; /* take up available space inside a flex container */
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* styles page title */
+h1 {
+  position: absolute; /* positions content relative to nearest ancestor */
+  top: 0px; /* space from top of container */
+  text-align: center; /* centers text within block */
+  font-size: 2rem; /* font size */
+  color: #333; /* text color */
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* outermost layer of the entire screen */
+.AppContainer {
+  display: flex; /* turns on flexstyle */
+  justify-content: center; /* centers horizontally */
+  align-items: center; /* centers vertically */
+  height: 100vh; /* full screen height */
+  background-color: #f0f0f0; /* background of app */
+  font-family: sans-serif; /* font style */
+  padding: 20px; /* space within container */
+  box-sizing: border-box; /* paddings and borders are included in height/width */
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+/* left side panel that contains game rules */
+.rules {
+  display: flex; /* turns on flexstyle */
+  flex-direction: column; /* directs content into a column */
+  align-items: center; /* centers items vertically */
+  justify-content: center; /* centers items horizontally */
+  margin-right: 20px; /* space left to the right side */
+  font-size: 1.2rem; /* content font size */
 }
 
-.App-link {
-  color: #61dafb;
+/* right side panel that contains the scoreboard */
+.scoreboard {
+  display: flex; /* turns on flexstyle */
+  flex-direction: column; /* directs content into a column */
+  align-items: center; /* centers items vertically */
+  justify-content: center; /* centers items horizontally */
+  margin-left: 20px; /* space left to the left side */
+  font-size: 1.2rem; /* content font size */
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* adds spacing to the list inside the rules section */
+.rules ul {
+  padding-left: 20px; /* padding on the left side */
+}
+
+/*  general purpose style for sidebar rules/scoreboard */
+.Sidebar {
+  display: flex; /* turns on flexstyle display */
+  flex-direction: column; /* directs content into a column */
+  justify-content: center; /* aligns items horizontally */
+  align-items: center; /* aligns items vertically */
+  width: 300px; /* sidebar width */
+  height: 30%; /* sidebar height */
+  padding: 10px; /* space within sidebar */
+  background-color: #ffffff; /* sidebar color */
+  border-radius: 10px; /* box corner curves */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* box shadow */
+  margin: 30px;  /* margin around sidebar */
+}
+
+/* creates minesweeper board using CSS grid */
+.grid {
+  display: grid; /* turn on grid display */
+  grid-template-columns: repeat(5, 90px); /* 5 columns of 90px */
+  grid-template-rows: repeat(5, 90px);    /* 5 rows of 90px */
+  gap: 3px; /* spacing between cells */
+  justify-content: center; /* horizontally centers content */
+  align-content: center;
+}
+
+/* styles each individual cell on the minesweeper grid */
+.cell {
+  width: 90px; /* cell width */
+  height: 90px; /* cell height */
+  background-color: #0f7872; /* cell color */
+  display: flex; /* enables flexbox style */
+  align-items: center; /* vertically centers content */
+  justify-content: center; /* horizontally centers content */
+  font-size: 2rem; /* font size for content in cell */
+}
+
+/* changes cell color when hovered over */
+.cell:hover {
+  background-color: #139891; /* color cell changes to when hovered over */
+}
+
+/* visually shows revealed cells */
+.cell.revealed {
+  background-color: #ddd; /* change cell color once it's revealed */
+}
+
+/* changes revealed bomb cell color */
+.cell.bomb {
+  background-color: red !important; /* bomb cells turn red */
+}
+
+/* general styling for all buttons */
+button {
+  padding: 10px 20px; /* space within button */
+  font-size: 16px; /* text size */
+  background-color: lightblue; /* button color */
+  border: 1px solid #ccc; /* box border */
+}
+
+/* popup overlay style */
+.popup {
+  position: fixed; /* fixes popup position */
+  top: 0; /* anchor to top of the screen */
+  left: 0; /* anchor to left */
+  width: 100vw; /* take full width */
+  height: 100vh; /* take full height */
+  display: flex; /* enables flex display */
+  align-items: center; /* vertically center popup */
+  justify-content: center; /* horizontally center popup */
+  background-color: rgba(0, 0, 0, 0.3); /* optional: slight dark overlay */
+  z-index: 1000; /* make sure it stays above everything */
+}
+
+/* popup box style */
+.popup-content {
+  background-color: white; /* background color of popup */
+  color: black; /* font color */
+  padding: 10px 15px; /* space within popup */
+  border-radius: 10px; /* curved edge of popup */
+  text-align: center; /* centers text */
+  font-size: 1rem; /* popup text font size */
+}
+
+/* main interactive area with the grid and controls */
+.game-wrapper {
+  display: flex; /* turn on flexstyle display */
+  flex-direction: column; /* directs content into a column */
+  align-items: center; /* centers content vertically */
+  margin-top: 90px; /* margin left on top of block */
+  gap: 20px; /* increased for even vertical spacing */
+}
+
+/* difficulty dropdown box */
+.dropdown select,
+.difficulty-button select {
+  padding: 10px 6px ; /* space within button */
+  font-size: 16px; /* text front size */
+  background-color: lightblue; /* button background color */
+  border: 1px solid #ccc; /* border features */
+  border-radius: 6px; /* border curves */
 }
