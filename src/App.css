@@ -154,3 +154,9 @@ button {
   border: 1px solid #ccc; /* border features */
   border-radius: 6px; /* border curves */
 }
+
+.cell.infected {
+  background-color: #ff4d4d !important; /* red */
+  color: white;
+  border: 2px solid #ff4d4d;
+}

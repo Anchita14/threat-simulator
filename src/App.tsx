@@ -1,43 +1,35 @@
 // usestate: declaring state variables in functional component
 // useeffect: handling side effects
-// usecallback: memorizes functions to prevent uncessary re-rendering
+// usecallback: memorizes functions to prevent unnecessary re-rendering
 import React, { useState, useEffect, useCallback } from "react";
 import "./App.css";
 
-// defines a typescript type for each grid cell
+// defines a TypeScript type for each grid cell
 type Cell = {
   isBomb: boolean;
   isRevealed: boolean;
+  isInfected?: boolean;
 };
 
 const defaultGridSize = 5;
 
-// helper to generate a list of unique bomb locations
-const generateBombLocations = (gridSize: number): { row: number; col: number }[] => {
-  const totalCells = gridSize * gridSize;
-  const bombCount = Math.max(1, Math.floor(totalCells * 0.15 + Math.random() * totalCells * 0.1)); // 15-25% of grid
-  const bombSet = new Set<string>();
-  while (bombSet.size < bombCount) {
-    const row = Math.floor(Math.random() * gridSize);
-    const col = Math.floor(Math.random() * gridSize);
-    bombSet.add(`${row},${col}`);
-  }
-  return Array.from(bombSet).map(str => {
-    const [row, col] = str.split(",").map(Number);
-    return { row, col };
-  });
-};
+const generateBombLocation = (gridSize: number) => ({
+  row: Math.floor(Math.random() * gridSize),
+  col: Math.floor(Math.random() * gridSize),
+});
 
-// initialize grid with bombs
-const generateGrid = (gridSize: number, bombLocations: { row: number; col: number }[]) => {
-  const bombSet = new Set(bombLocations.map(b => `${b.row},${b.col}`));
+const generateGrid = (
+    gridSize: number,
+    bombLocation: { row: number; col: number }
+): Cell[][] => {
   const newGrid: Cell[][] = [];
   for (let i = 0; i < gridSize; i++) {
     newGrid[i] = [];
     for (let j = 0; j < gridSize; j++) {
       newGrid[i][j] = {
-        isBomb: bombSet.has(`${i},${j}`),
+        isBomb: i === bombLocation.row && j === bombLocation.col,
         isRevealed: false,
+        isInfected: false,
       };
     }
   }
@@ -46,14 +38,18 @@ const generateGrid = (gridSize: number, bombLocations: { row: number; col: numbe
 
 const App = ({
                exposeBombs = false,
+               initialBombLocation,
                initialGridSize,
              }: {
   exposeBombs?: boolean;
+  initialBombLocation?: { row: number; col: number };
   initialGridSize?: number;
 }) => {
   const [gridSize, setGridSize] = useState(initialGridSize ?? defaultGridSize);
-  const [bombLocations, setBombLocations] = useState(generateBombLocations(gridSize));
-  const [grid, setGrid] = useState(() => generateGrid(gridSize, bombLocations));
+  const [bombLocation, setBombLocation] = useState(
+      initialBombLocation ?? generateBombLocation(initialGridSize ?? defaultGridSize)
+  );
+  const [grid, setGrid] = useState(() => generateGrid(gridSize, bombLocation));
   const [gameOver, setGameOver] = useState(false);
   const [gameWin, setGameWin] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -63,17 +59,39 @@ const App = ({
 
   const revealCell = (row: number, col: number) => {
     if (gameOver || grid[row][col].isRevealed) return;
-    const newGrid = [...grid];
+    const newGrid = [...grid.map(row => [...row])];
     newGrid[row][col].isRevealed = true;
 
     if (newGrid[row][col].isBomb) {
-      setGameOver(true);
-      setLosses(prev => prev + 1);
-      setCountdown(5);
+      // Infect adjacent cells
+      const directions = [
+        [-1, -1], [-1, 0], [-1, 1],
+        [0, -1], /*self*/ [0, 1],
+        [1, -1], [1, 0], [1, 1],
+      ];
+
+      directions.forEach(([dx, dy]) => {
+        const newRow = row + dx;
+        const newCol = col + dy;
+        if (
+            newRow >= 0 &&
+            newRow < gridSize &&
+            newCol >= 0 &&
+            newCol < gridSize
+        ) {
+          newGrid[newRow][newCol].isRevealed = true;
+          newGrid[newRow][newCol].isInfected = true;
+        }
+      });
+
       setGrid(newGrid);
+      setGameOver(true);
+      setLosses((prev) => prev + 1);
+      setCountdown(5);
       return;
     }
 
+    // Check for win condition
     let allSafeRevealed = true;
     for (let i = 0; i < gridSize; i++) {
       for (let j = 0; j < gridSize; j++) {
@@ -86,7 +104,7 @@ const App = ({
     if (allSafeRevealed) {
       setGameWin(true);
       setGameOver(true);
-      setWins(prev => prev + 1);
+      setWins((prev) => prev + 1);
       setCountdown(5);
     }
 
@@ -94,9 +112,9 @@ const App = ({
   };
 
   const resetGame = useCallback(() => {
-    const newBombLocations = generateBombLocations(gridSize);
-    setBombLocations(newBombLocations);
-    setGrid(generateGrid(gridSize, newBombLocations));
+    const newBombLocation = generateBombLocation(gridSize);
+    setBombLocation(newBombLocation);
+    setGrid(generateGrid(gridSize, newBombLocation));
     setGameOver(false);
     setGameWin(false);
     setCountdown(null);
@@ -119,7 +137,8 @@ const App = ({
         <ul>
           <li>Click on a tile to reveal it</li>
           <li>Avoid the 💣</li>
-          <li>Reveal all the safe cells to win</li>
+          <li>Revealing the bomb infects adjacent cells</li>
+          <li>Reveal all safe cells to win</li>
           <li>You can change the game difficulty mode</li>
         </ul>
       </div>
@@ -170,7 +189,7 @@ const App = ({
                     key={`${i}-${j}`}
                     data-testid={`${i}-${j}`}
                     data-bomb-testid={cell.isBomb && exposeBombs ? "bomb" : undefined}
-                    className={`cell ${cell.isRevealed ? (cell.isBomb ? "bomb revealed" : "revealed") : cell.isBomb ? "bomb" : ""}`}
+                    className={`cell ${cell.isRevealed ? (cell.isBomb ? "bomb revealed" : "revealed") : ""} ${cell.isInfected ? "infected" : ""}`}
                     onClick={() => revealCell(i, j)}
                 >
                   {cell.isRevealed ? (cell.isBomb ? "💣" : "") : ""}
@@ -180,7 +199,6 @@ const App = ({
       </div>
   );
 
-
   const renderDifficultyControl = () => (
       <div className="difficulty-button">
         <select
@@ -189,9 +207,9 @@ const App = ({
             onChange={(e) => {
               const newSize = parseInt(e.target.value, 10);
               setGridSize(newSize);
-              const newBombs = generateBombLocations(newSize);
-              setBombLocations(newBombs);
-              setGrid(generateGrid(newSize, newBombs));
+              const newBombLocation = generateBombLocation(newSize);
+              setBombLocation(newBombLocation);
+              setGrid(generateGrid(newSize, newBombLocation));
               setGameOver(false);
               setGameWin(false);
               setCountdown(null);
